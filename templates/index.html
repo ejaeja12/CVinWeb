@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bootstrap demo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">Edit Monkey</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+                aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/about">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/how">How to use</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/contact">Contact Us</a>
+                    </li>
+
+                </ul>
+                <div class="d-flex" role="search">
+                    <button class="btn btn-outline-success mx-1" type="submit">Login</button>
+                    <button class="btn btn-outline-success mx-1" type="submit">Signup</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+     
+        {% for category, message in messages %} 
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <strong>Success!</strong> {{ message | safe}}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+
+    {% endif %}
+    {% endwith %}
+
+
+        <div class="container my-4">
+
+            <h1 class="fs-2 text">Edit Monkey - Edit your app online</h1>
+
+            <form action="{{url_for('video')}}" method="post" enctype="multipart/form-data">
+
+                <div class="mb-3">
+                    <label for="formFile" class="form-label">Select an Image to edit</label>
+                    <input class="form-control" type="file" name="file" id="formFile">
+                </div>
+                
+                <button type="submit" class="btn btn-success">Submit</button>
+
+            </form>
+            <div style="position: relative;">
+                <canvas id="canvas" width="700" height="500"
+                    style=" margin: auto; width: 700px;height: 500px;position: absolute; z-index: 99;" > 
+                </canvas> 
+                <img id="img" src="{{img}}" width="700" height="500" style="position: absolute;"/>
+                
+            </div>
+            
+            
+            </div>
+        </div>
+
+        <div style="margin-top: 500px; height:100px ; width: 100%;">
+            <div id="output_arr" style="border: 2px;border-color: black;border-style: solid; width: 300px;margin-left: 50px;margin-top: 20px;">
+                <p id="el_arr">
+
+                </p>
+            </div>
+            <form action="{{url_for('submit_xy')}}" method="post" enctype="multipart/form-data">
+
+                <div class="mb-3">
+                    
+                    <input class="form-control" type="text" name="[]" value="" id="input_bin">
+                </div>
+                
+                <button type="submit" class="btn btn-success">Submit</button>
+
+            </form>
+        </div>
+        
+       
+        <script type="text/javascript"> 
+           
+            // function getMousePosition(canvas, event) { 
+            //     let rect = canvas.getBoundingClientRect(); 
+            //     let x = event.clientX - rect.left; 
+            //     let y = event.clientY - rect.top; 
+            //     console.log("Coordinate x: " + x,  
+            //                 "Coordinate y: " + y); 
+            // } 
+          
+            // let canvasElem = document.querySelector("canvas"); 
+            
+            
+            
+              
+            // canvasElem.addEventListener("mousedown", function(e) 
+            // { 
+            //     getMousePosition(canvasElem, e); 
+            // }); 
+
+            // get references to the canvas and context
+            var canvas = document.getElementById("canvas");
+            var ctx = canvas.getContext("2d");
+
+            // style the context
+            ctx.strokeStyle = "blue";
+            ctx.lineWidth = 2;
+
+            // calculate where the canvas is on the window
+            // (used to help calculate mouseX/mouseY)
+            var canvasOffset = canvas.getBoundingClientRect();
+            var offsetX = canvasOffset.x;
+            var offsetY = canvasOffset.y;
+
+            // this flage is true when the user is dragging the mouse
+            var isDown = false;
+
+            // these vars will hold the starting mouse position
+            var startX;
+            var startY;
+            let inVal = document.getElementById('input_bin');
+
+            var list = []
+
+            // var x1 = null
+            // var x2 = null
+            // var y1 = null
+            // var y2 = null
+
+            function handleMouseDown(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                // save the starting x/y of the rectangle
+                startX = parseInt(e.clientX - offsetX);
+                startY = parseInt(e.clientY - offsetY);
+
+                // set a flag indicating the drag has begun
+                isDown = true;
+            }
+
+            function handleMouseUp(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                // the drag is over, clear the dragging flag
+                isDown = false;
+                console.log(list)
+                list.push([x1,y1,x2,y2])
+                
+
+                if(list.length > 0){
+                        const element = document.getElementById("output_arr");
+                        const para = document.createElement("p");
+                        const node = document.createTextNode(list[list.length-1]);
+                        para.appendChild(node);
+
+                        
+                        element.appendChild(para);
+                        inVal.value = list;
+                }
+                
+            }
+
+            function handleMouseOut(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                // the drag is over, clear the dragging flag
+                
+                isDown = false; 
+            }
+
+            function handleMouseMove(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                // if we're not dragging, just return
+                if (!isDown) {
+                    return;
+                }
+                
+
+                // get the current mouse position
+                mouseX = parseInt(e.clientX - offsetX);
+                mouseY = parseInt(e.clientY - offsetY);
+
+                // Put your mousemove stuff here
+
+                // clear the canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // calculate the rectangle width/height based
+                // on starting vs current mouse position
+                var width = mouseX - startX;
+                var height = mouseY - startY;
+
+                // draw a new rect from the start position 
+                // to the current mouse position
+                ctx.strokeRect(startX, startY, width, height);
+                x1 = startX
+                y1 = startY
+                x2 = width
+                y2 = height
+
+                if(list.length > 0){
+                    for(var i =0; i < list.length;i++){
+                        ctx.strokeRect(list[i][0], list[i][1], list[i][2], list[i][3]);
+                    }
+                }
+
+            }
+            
+
+            
+
+            document.getElementById('canvas').addEventListener('mousedown', function(e) {
+            handleMouseDown(e);
+            });
+            document.getElementById('canvas').addEventListener('mousemove', function(e) {
+            handleMouseMove(e);
+            });
+            document.getElementById('canvas').addEventListener('mouseup', function(e) {
+            handleMouseUp(e);
+            });
+            document.getElementById('canvas').addEventListener('mouseout', function(e) {
+            handleMouseOut(e);
+            });
+
+            
+
+
+        </script> 
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe"
+            crossorigin="anonymous">
+        </script>
+        
+    </body>
+</html>
